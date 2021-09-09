@@ -1,5 +1,8 @@
 from Token import Token
 import re
+import webbrowser
+
+reporteHTML = ''
 
 class Analizador():
     
@@ -106,7 +109,6 @@ class Analizador():
                     elif self.es_booleano(self.lexema):
                         self.agregar_token(self.tipos.BOOL)
                     else:
-                        print('entre')
                         self.agregar_token(self.tipos.ERROR)
                         
             elif self.estado == 2:
@@ -171,14 +173,7 @@ class Analizador():
         if entrada in booleanos:
             return True
         return False
-    
-    
-    def Impr(self):
-        print(len(self.tokens))
-        for token in self.tokens:
-            print(token.lexema_valido," --> ",token.get_tipo(),' --> ',token.get_fila(), ' --> ',token.get_columna())
-    
-    
+     
     def Imprimir(self):
         for x in self.tokens:
             if x.tipo != self.tipos.ERROR:
@@ -188,8 +183,85 @@ class Analizador():
         for x in self.tokens:
             if x.tipo == self.tipos.ERROR:
                 print(x.get_lexema()," --> ",x.get_fila(), ' --> ',x.get_columna(),'--> Error Lexico')
+                            
+    # Original --> False False
+    # Mirror_x --> True False
+    # Mirror_y --> False True
+    # Double_M --> True True       
+       
+    def graficar(self, img, ancho, alto, mirror_x, mirror_y):
+        pinta = True
+        coordenada_x = -1
+        coordenada_y = -1
+        token_fila = -1
+        filas = 0
+        columnas = 0
+        token_tamano_fila = -1
+        token_tamano_columna = -1
+        for token in self.tokens:
+            if token.get_lexema() == 'FILAS':
+                token_tamano_fila = token.get_fila()
+            if token_tamano_fila == token.get_fila() and token.tipo == self.tipos.NUMERO:
+                filas = token.get_lexema()
+            if token.get_lexema() == 'COLUMNAS':
+                token_tamano_columna = token.get_fila()
+            if token_tamano_columna == token.get_fila() and token.tipo == self.tipos.NUMERO:
+                columnas = token.get_lexema()    
+            if token_fila < token.get_fila():
+                coordenada_x = -1
+                coordenada_y = -1
+                token_fila = -1
+            if token.tipo == self.tipos.NUMERO:
+                if coordenada_x == -1:
+                    coordenada_x = token.get_lexema()
+                    token_fila = token.get_fila()
+                elif coordenada_y == -1 and token_fila == token.get_fila():
+                    coordenada_y = token.get_lexema()    
+            if token.tipo == self.tipos.BOOL:
+                if token.get_lexema() == 'TRUE':
+                    pinta = True
+                elif token.get_lexema() == 'FALSE':
+                    pinta = False          
+            if token.tipo == self.tipos.COLOR and token_fila == token.get_fila() and pinta: #si se encuentran en la misma fila el token color y el token numero y es True
+                factor_x = ancho//int(filas)
+                factor_y = alto//int(columnas)
+                color = token.get_lexema()
+                if mirror_y:
+                    coordenada_y = int(columnas) - int(coordenada_y) + 1
+                if mirror_x:
+                    coordenada_x = int(filas) - int(coordenada_x) + 1
+                print(color,coordenada_x,coordenada_y)
+                contador_f = 0
+                contador_y = 0
+                coordenada_x = int(coordenada_x) * int(factor_x)
+                coordenada_y = int(coordenada_y) * int(factor_y)
+                for i in range(factor_x*factor_y):
+                    img.put(color,(coordenada_x+contador_f,coordenada_y+contador_y))
+                    contador_f += 1
+                    if contador_f == factor_x:
+                        contador_y += 1
+                        contador_f = 0
     
-    
+    def crear_reporte():
+        global reporteHTML
+        try: 
+            file = open('Reporte.html','w')
+            head = '<head><title>Reporte</title></head>\n'
+            body = "<body bgcolor=\"#B6F49D\"> <font FACE=\"times new roman\">"
+            body += "<table width=\"475\" bgcolor=#B6F49D align=left> <tr> <td><font color=\"black\" FACE=\"times new roman\">" 
+            body += "<p align=\"left\">Arnoldo Luis Antonio González Camey &nbsp;—&nbsp; Carné: 201701548</p></font>"
+            body += "</td> </tr></table></br></br>" +   reporteHTML + "</body>"
+            html = '<html>\n' + head + body + '</html>'
+            file.write(html)
+            print('Reporte generado exitosamente')
+        except OSError:
+            print("Error al crear el Reporte")
+        finally:         
+            file.close()
+            webbrowser.open_new_tab('Reporte.html')
 
-                        
-        
+    def agregar_texto(text, color):
+        global reporteHTML 
+        reporteHTML += '<table width=\"800\" bgcolor=CDF9BA align=center> <tr> <td>'
+        reporteHTML += '<font color=\"'+color+'\" FACE=\"courier, courier new, arial\"><p align=\"left\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + text + '</p></font>'
+        reporteHTML += '</td> </tr> </table>'
