@@ -16,11 +16,12 @@ class Token():
     BOOL = 8
     ERROR = 9
     
-    def __init__(self, lexema, tipo, fila, columna):
+    def __init__(self, lexema, tipo, fila, columna, id):
         self.lexema_valido = lexema
         self.tipo = tipo
         self.fila = fila
         self.columna = columna
+        self.id = id
         
     def get_tipo(self):
         if self.tipo == self.PALABRA_RESERVADA:
@@ -47,6 +48,9 @@ class Token():
         return self.fila   
     
     def get_columna(self):
-        return self.columna   
+        return self.columna
+    
+    def get_id(self):
+        return self.id   
         
             

@@ -1,4 +1,6 @@
+from Color import Color
 from Token import Token
+from Imagen import Imagen
 import re
 import webbrowser
 
@@ -6,6 +8,7 @@ reporteHTML = ''
 
 class Analizador():
     
+    imagenes = []
     lexema = ''
     estado = 0
     tokens = []
@@ -13,13 +16,17 @@ class Analizador():
     fila = 1
     generar = True
     i = 0
-    tipos = Token("lexema", -1, -1, -1)
+    tipos = Token("lexema", -1, -1, -1, -1)
+    colores = Imagen('',-1,-1,-1,-1,False,False,False,-1)
+    id = 0
     
     def agregar_token(self, tipo):
-        nuevo_token = Token(self.lexema, tipo, self.fila, self.columna)
+        nuevo_token = Token(self.lexema, tipo, self.fila, self.columna, self.id)
         self.tokens.append(nuevo_token)
         self.lexema = ''
         self.estado = 0
+        if tipo != 9:
+            self.id += 1
         
     def analizador_estados(self, entrada):
         self.estado = 0
@@ -177,7 +184,7 @@ class Analizador():
     def Imprimir(self):
         for x in self.tokens:
             if x.tipo != self.tipos.ERROR:
-                print(x.get_lexema()," --> ",x.get_tipo(),' --> ',x.get_fila(), ' --> ',x.get_columna())
+                print(x.get_lexema()," --> ",x.get_tipo(),' --> ',x.get_fila(), ' --> ',x.get_columna(), ' --> ',x.get_id())
     
     def ImprimirErrores(self):
         for x in self.tokens:
@@ -188,7 +195,35 @@ class Analizador():
     # Mirror_x --> True False
     # Mirror_y --> False True
     # Double_M --> True True       
-       
+   
+    def graficar2(self, img, ancho, alto, mirror_x, mirror_y, nombre):
+        for image in self.imagenes: #validar el nombre de la que se desea 
+            filas = int(image.filas)
+            columnas = int(image.columnas)
+            factor_x = ancho//filas
+            factor_y = alto//columnas
+            
+            for contador in range(image.cantidad_colores):
+                coordenada_x = int(image.colores[contador].x)
+                coordenada_y = int(image.colores[contador].y)
+                if mirror_y:
+                    coordenada_y = int(columnas) - int(coordenada_y) + 1
+                if mirror_x:
+                    coordenada_x = int(filas) - int(coordenada_x) + 1
+             
+                coordenada_x *= int(factor_x)
+                coordenada_y *= int(factor_y) 
+                contador_f = 0
+                contador_y = 0
+                if image.colores[contador].pintar:
+                    for i in range(factor_x*factor_y): 
+                        img.put(image.colores[contador].codigo,(coordenada_x+contador_f, coordenada_y+contador_y))
+                        contador_f += 1
+                        if contador_f == factor_x:
+                            contador_y += 1
+                            contador_f = 0
+                            
+    #-----------GRAFICAR CON LOS TOKENS-------------            
     def graficar(self, img, ancho, alto, mirror_x, mirror_y):
         pinta = True
         coordenada_x = -1
@@ -200,14 +235,14 @@ class Analizador():
         token_tamano_columna = -1
         for token in self.tokens:
             if token.get_lexema() == 'FILAS':
-                token_tamano_fila = token.get_fila()
-            if token_tamano_fila == token.get_fila() and token.tipo == self.tipos.NUMERO:
-                filas = token.get_lexema()
-            if token.get_lexema() == 'COLUMNAS':
+                token_tamano_fila = token.get_fila() 
+            elif token_tamano_fila == token.get_fila() and token.tipo == self.tipos.NUMERO: #aca
+                filas = token.get_lexema() 
+            elif token.get_lexema() == 'COLUMNAS': #aca
                 token_tamano_columna = token.get_fila()
-            if token_tamano_columna == token.get_fila() and token.tipo == self.tipos.NUMERO:
+            elif token_tamano_columna == token.get_fila() and token.tipo == self.tipos.NUMERO:
                 columnas = token.get_lexema()    
-            if token_fila < token.get_fila():
+            if token_fila < token.get_fila(): #donde guardo el numero de la fila es menor al numero de fila actual   saber si ya pase a la siguiente fila
                 coordenada_x = -1
                 coordenada_y = -1
                 token_fila = -1
@@ -242,6 +277,129 @@ class Analizador():
                         contador_y += 1
                         contador_f = 0
     
+    def guardar_imagen(self):
+        cantidad_colores = 0
+        titulo = ''
+        filas = 0
+        columnas = 0
+        ancho = 0
+        alto = 0
+        token_fila = -1
+        id_token = -1
+        lexema = ''
+        numero_fila = -1
+        id_celdas = -1
+        valor = False
+        tamano = len(self.tokens)
+        cont = 0
+        mirrorx = False
+        mirrory = False
+        doublemirror = False
+        for token in self.tokens:
+            if token.get_lexema() == 'TITULO':
+                token_fila = token.get_fila()
+                id_token = token.get_id()
+                
+            elif token.tipo == self.tipos.CADENA and token_fila == token.get_fila() and id_token == int(token.get_id()) - 2:
+                titulo = token.get_lexema()
+                titulo = titulo.replace('"','')       
+                token_fila = -1
+                id_token = -1
+                
+            elif token.get_lexema() == 'ANCHO':
+                lexema = token.get_lexema()
+                token_fila = token.get_fila()
+                id_token = token.get_id()
+                
+            elif token.tipo == self.tipos.NUMERO and token_fila == token.get_fila() and id_token == int(token.get_id()) - 2 and lexema == 'ANCHO':
+                ancho = token.get_lexema()   
+                token_fila = -1
+                id_token = -1
+                
+            elif token.get_lexema() == 'ALTO':
+                lexema = token.get_lexema()
+                token_fila = token.get_fila()
+                id_token = token.get_id()
+                
+            elif token.tipo == self.tipos.NUMERO and token_fila == token.get_fila() and id_token == int(token.get_id()) - 2 and lexema == 'ALTO':
+                alto = token.get_lexema()   
+                token_fila = -1
+                id_token = -1
+                    
+            elif token.get_lexema() == 'FILAS':
+                lexema = token.get_lexema()
+                token_fila = token.get_fila()
+                id_token = token.get_id()
+                
+            elif token.tipo == self.tipos.NUMERO and token_fila == token.get_fila() and id_token == int(token.get_id()) - 2 and lexema == 'FILAS':
+                filas = token.get_lexema()     
+                token_fila = -1
+                id_token = -1
+                
+            elif token.get_lexema() == 'COLUMNAS':
+                lexema = token.get_lexema()
+                token_fila = token.get_fila()
+                id_token = token.get_id()
+                
+            elif token.tipo == self.tipos.NUMERO and token_fila == token.get_fila() and id_token == int(token.get_id()) - 2 and lexema == 'COLUMNAS':
+                columnas = token.get_lexema()     
+                token_fila = -1
+                id_token = -1
+                
+            elif token.get_lexema() == 'CELDAS':
+                lexema = token.get_lexema()
+            
+            elif token.get_lexema() == 'FILTROS':
+                lexema = token.get_lexema()
+                token_fila = token.get_fila()
+                id_token = token.get_id()    
+            
+            if numero_fila < token.get_fila(): #saber si ya pase a la siguiente fila y reset coordenadas
+                coordenada_x = -1
+                coordenada_y = -1
+                numero_fila = -1
+                
+            if token.tipo == self.tipos.NUMERO and lexema == 'CELDAS':
+                if coordenada_x == -1:
+                    coordenada_x = token.get_lexema()
+                    numero_fila = token.get_fila()
+                    id_celdas = token.get_id()
+                elif coordenada_y == -1 and numero_fila == token.get_fila() and id_celdas == int(token.get_id()) - 2:
+                    coordenada_y = token.get_lexema()    
+            elif token.tipo == self.tipos.BOOL and lexema == 'CELDAS':
+                if token.get_lexema() == 'TRUE':
+                    valor = True
+                elif token.get_lexema() == 'FALSE':
+                    valor = False     
+            
+            elif token.tipo == self.tipos.COLOR and numero_fila == token.get_fila() and lexema == 'CELDAS': #si se encuentran en la misma fila el token color y el token numero y es True
+                codigo_color = token.get_lexema()
+                nuevo_color = Color(coordenada_x, coordenada_y, valor, codigo_color)
+                self.colores.agregar_colores(nuevo_color)
+                cantidad_colores += 1
+                #print(coordenada_x, coordenada_y,valor,codigo_color)
+            
+            if token.get_lexema() == 'MIRRORX': 
+                mirrorx = True
+            elif token.get_lexema() == 'MIRRORY':
+                mirrory = True
+            elif token.get_lexema() == 'DOUBLEMIRROR':
+                doublemirror = True
+                
+            if token.get_lexema() == '@@@@' or cont == tamano - 1 :
+                #print(titulo, ancho, alto, filas, columnas)
+                nueva_imagen = Imagen(titulo, filas, columnas, ancho, alto, mirrorx, mirrory, doublemirror, cantidad_colores)
+                self.imagenes.append(nueva_imagen)
+                
+            cont += 1    
+    
+    def impr(self):
+        i = 0
+        for img in self.imagenes:
+            print(img.titulo, img.ancho, img.alto, img.filas, img.columnas, img.mirrorx, img.mirrory, img.doublemirror)
+            for i in range(img.cantidad_colores): 
+                print(img.colores[i].x, img.colores[i].y, img.colores[i].pintar, img.colores[i].codigo)    
+                
     def crear_reporte():
         global reporteHTML
         try: 

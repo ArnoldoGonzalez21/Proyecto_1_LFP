@@ -32,10 +32,17 @@ class po():
         boton_analizar = tkinter.Button(self.ventana, text = 'Analizar', command = self.analizar_archivo, width = 10, height = 2)
         boton_reportes = tkinter.Button(self.ventana, text = 'Reportes', width = 10, height = 2)
         boton_salir = tkinter.Button(self.ventana, text = 'Salir', command = lambda: exit(), width = 10, height = 2)
-        boton_original = tkinter.Button(self.ventana, text = 'Original', command = lambda: self.crear_imagen(False, False), width = 10, height = 3)
-        boton_mirror_x = tkinter.Button(self.ventana, text = 'Mirror X', command = lambda: self.crear_imagen(True, False), width = 10, height = 3)
-        boton_mirror_y = tkinter.Button(self.ventana, text = 'Mirror Y', command = lambda: self.crear_imagen(False, True), width = 10, height = 3)
-        boton_double_mirror = tkinter.Button(self.ventana, text = 'Bouble Mirror', command = lambda: self.crear_imagen(True, True), width = 10, height = 3)
+        
+        boton_original = tkinter.Button(self.ventana, text = 'Original', command = lambda: self.pintar(False, False), width = 10, height = 3)
+        boton_mirror_x = tkinter.Button(self.ventana, text = 'Mirror X', command = lambda: self.pintar(True, False), width = 10, height = 3)
+        boton_mirror_y = tkinter.Button(self.ventana, text = 'Mirror Y', command = lambda: self.pintar(False, True), width = 10, height = 3)
+        boton_double_mirror = tkinter.Button(self.ventana, text = 'Bouble Mirror', command = lambda: self.pintar(True, True), width = 10, height = 3)
+        
+        #boton_original = tkinter.Button(self.ventana, text = 'Original', command = lambda: self.pintar2(False, False), width = 10, height = 3)
+        #boton_mirror_x = tkinter.Button(self.ventana, text = 'Mirror X', command = lambda: self.pintar2(True, False), width = 10, height = 3)
+        #boton_mirror_y = tkinter.Button(self.ventana, text = 'Mirror Y', command = lambda: self.pintar2(False, True), width = 10, height = 3)
+        #boton_double_mirror = tkinter.Button(self.ventana, text = 'Bouble Mirror', command = lambda: self.pintar2(True, True), width = 10, height = 3)
+        
         boton_borrar = tkinter.Button(self.ventana, text = 'Borrar imagen', command = self.pintar_imagen, width = 12 , height = 1, bg = '#A9EAFF')
         
         boton_cargar.place(x = 10, y = 10)
@@ -60,12 +67,20 @@ class po():
     
     def analizar_archivo(self):
         self.lexico.analizador_estados(self.data)
-                       
+        self.lexico.guardar_imagen()
+        #self.lexico.impr()
+
     # Original --> False False
     # Mirror_x --> True False
     # Mirror_y --> False True
     # Double_M --> True True
     
+    def pintar(self, mirror_x, mirror_y):
+        self.lexico.graficar2(self.img, 400, 400, mirror_x, mirror_y, '') #cambiarlo al ancho de self los 400
+    
+    def pintar2(self, mirror_x, mirror_y):
+        self.lexico.graficar(self.img, 400, 400, mirror_x, mirror_y)
+                       
     def borrar_imagen(self, lienzo):
         lienzo.delete(tkinter.ALL)
     
@@ -79,64 +94,5 @@ class po():
                 contador_y += 1
                 contador_f = 0
     
-    def crear_rectangulo(self, lienzo):
-        lienzo.create_rectangle(0,0,self.ancho,self.alto, fill="white")
-        
-    
-    def crear_imagen(self, mirror_x, mirror_y):
-        pinta = True
-        ancho = 400 #cambiarlo al ancho de self
-        alto = 400
-        coordenada_x = -1
-        coordenada_y = -1
-        token_fila = -1
-        filas = 0
-        columnas = 0
-        token_tamano_fila = -1
-        token_tamano_columna = -1
-        for token in self.lexico.tokens:
-            if token.get_lexema() == 'FILAS':
-                token_tamano_fila = token.get_fila()
-            if token_tamano_fila == token.get_fila() and token.tipo == self.lexico.tipos.NUMERO:
-                filas = token.get_lexema()
-            if token.get_lexema() == 'COLUMNAS':
-                token_tamano_columna = token.get_fila()
-            if token_tamano_columna == token.get_fila() and token.tipo == self.lexico.tipos.NUMERO:
-                columnas = token.get_lexema()    
-            if token_fila < token.get_fila():
-                coordenada_x = -1
-                coordenada_y = -1
-                token_fila = -1
-            if token.tipo == self.lexico.tipos.NUMERO:
-                if coordenada_x == -1:
-                    coordenada_x = token.get_lexema()
-                    token_fila = token.get_fila()
-                elif coordenada_y == -1 and token_fila == token.get_fila():
-                    coordenada_y = token.get_lexema()    
-            if token.tipo == self.lexico.tipos.BOOL:
-                if token.get_lexema() == 'TRUE':
-                    pinta = True
-                elif token.get_lexema() == 'FALSE':
-                    pinta = False            
-            if token.tipo ==  self.lexico.tipos.COLOR and token_fila == token.get_fila() and pinta: #si se encuentran en la misma fila el token color y el token numero
-                factor_x = ancho//int(filas)
-                factor_y = alto//int(columnas)
-                color = token.get_lexema()
-                if mirror_y:
-                    coordenada_y = int(columnas) - int(coordenada_y) + 1
-                if mirror_x:
-                    coordenada_x = int(filas) - int(coordenada_x) + 1
-                print(color,coordenada_x,coordenada_y)
-                contador_f = 0
-                contador_y = 0
-                coordenada_x = int(coordenada_x) * int(factor_x)
-                coordenada_y = int(coordenada_y) * int(factor_y)
-                for i in range(factor_x*factor_y):
-                    self.img.put(color,(coordenada_x+contador_f,coordenada_y+contador_y))
-                    contador_f += 1
-                    if contador_f == factor_x:
-                        contador_y += 1
-                        contador_f = 0
-       
 if __name__ == '__main__':
     po()
