@@ -197,6 +197,7 @@ class Analizador():
     # Double_M --> True True       
    
     def graficar2(self, img, ancho, alto, mirror_x, mirror_y, nombre):
+        global reporteHTML
         for image in self.imagenes: #validar el nombre de la que se desea 
             filas = int(image.filas)
             columnas = int(image.columnas)
@@ -216,6 +217,10 @@ class Analizador():
                 contador_f = 0
                 contador_y = 0
                 if image.colores[contador].pintar:
+                                                #x, y, factor_x, factor_y contenido.fillRect(0,4,33,33); ctx.fillStyle = "#FF0000";
+                    reporteHTML += 'contenido.fillStyle = \"'+image.colores[contador].codigo+'\";'
+                    reporteHTML += 'contenido.fillRect('+str(coordenada_x)+','+str(coordenada_y)+','+str(factor_x)+','+str(factor_y)+');\n'
+                    #print(impL)
                     for i in range(factor_x*factor_y): 
                         img.put(image.colores[contador].codigo,(coordenada_x+contador_f, coordenada_y+contador_y))
                         contador_f += 1
@@ -400,7 +405,29 @@ class Analizador():
             for i in range(img.cantidad_colores): 
                 print(img.colores[i].x, img.colores[i].y, img.colores[i].pintar, img.colores[i].codigo)    
                 
-    def crear_reporte():
+    def crear_reporte(self):
+        global reporteHTML
+        try: 
+            file = open('Reporte.html','w')
+            css = '''<style>section{ \n
+            width:550px;
+            position:relative;
+            margin:auto;} </style>'''
+            head = '<head><title>Reporte</title>'+css+'</head>\n'
+            body = "<body> <font FACE=\"times new roman\">\n<section id = \"dibujo\">"
+            body += "<canvas id = \"lienzo\" width = \"550\" height = \"550\"></canvas></section><script>\n"
+            body += "var c = document.getElementById(\"lienzo\"); var contenido = c.getContext(\"2d\");\n"
+            body += reporteHTML + "</script></body>"
+            html = '<html>\n' + head + body + '</html>'
+            file.write(html)
+            print('Reporte generado exitosamente')
+        except OSError:
+            print("Error al crear el Reporte")
+        finally:         
+            file.close()
+            webbrowser.open_new_tab('Reporte.html')
+    
+    def crear_reporte2(self):
         global reporteHTML
         try: 
             file = open('Reporte.html','w')
@@ -418,7 +445,7 @@ class Analizador():
             file.close()
             webbrowser.open_new_tab('Reporte.html')
 
-    def agregar_texto(text, color):
+    def agregar_texto(self, text, color):
         global reporteHTML 
         reporteHTML += '<table width=\"800\" bgcolor=CDF9BA align=center> <tr> <td>'
         reporteHTML += '<font color=\"'+color+'\" FACE=\"courier, courier new, arial\"><p align=\"left\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + text + '</p></font>'

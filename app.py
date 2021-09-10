@@ -30,7 +30,7 @@ class po():
     def crear_botones(self, lienzo):
         boton_cargar = tkinter.Button(self.ventana, text = 'Cargar', command = self.leer_archivo, width = 10, height = 2)
         boton_analizar = tkinter.Button(self.ventana, text = 'Analizar', command = self.analizar_archivo, width = 10, height = 2)
-        boton_reportes = tkinter.Button(self.ventana, text = 'Reportes', width = 10, height = 2)
+        boton_reportes = tkinter.Button(self.ventana, text = 'Reportes', command = self.lexico.crear_reporte,  width = 10, height = 2)
         boton_salir = tkinter.Button(self.ventana, text = 'Salir', command = lambda: exit(), width = 10, height = 2)
         
         boton_original = tkinter.Button(self.ventana, text = 'Original', command = lambda: self.pintar(False, False), width = 10, height = 3)
@@ -64,6 +64,9 @@ class po():
         except OSError:
             print("<<< No se pudo leer el Archivo", ruta ,'>>>')
             return   
+    
+    def crear_repo(self):
+        self.lexico.crear_reporte()
     
     def analizar_archivo(self):
         self.lexico.analizador_estados(self.data)
