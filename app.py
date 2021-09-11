@@ -13,13 +13,11 @@ class po():
     ventana = tkinter.Tk()     
     ancho = 550
     alto = 550
-    img = PhotoImage(width = ancho, height = alto)
     
     def __init__(self):
         self.configuracion_ventana()        
-        lienzo = Canvas(self.ventana, width = self.ancho, height = self.alto, bg = 'white')#resetear para que este en blanco de nuevo
+        lienzo = Canvas(self.ventana, width = self.ancho, height = self.alto, bg = 'white')
         lienzo.place(x = 150, y = 100)
-        lienzo.create_image((self.ancho//2, self.alto//2), image = self.img, state = "normal")
         self.crear_botones(lienzo)
         self.ventana.mainloop()
         
@@ -33,17 +31,12 @@ class po():
         boton_reportes = tkinter.Button(self.ventana, text = 'Reportes', command = self.lexico.crear_reporte,  width = 10, height = 2)
         boton_salir = tkinter.Button(self.ventana, text = 'Salir', command = lambda: exit(), width = 10, height = 2)
         
-        boton_original = tkinter.Button(self.ventana, text = 'Original', command = lambda: self.pintar(False, False), width = 10, height = 3)
-        boton_mirror_x = tkinter.Button(self.ventana, text = 'Mirror X', command = lambda: self.pintar(True, False), width = 10, height = 3)
-        boton_mirror_y = tkinter.Button(self.ventana, text = 'Mirror Y', command = lambda: self.pintar(False, True), width = 10, height = 3)
-        boton_double_mirror = tkinter.Button(self.ventana, text = 'Bouble Mirror', command = lambda: self.pintar(True, True), width = 10, height = 3)
+        boton_original = tkinter.Button(self.ventana, text = 'Original', command = lambda: self.pintar3(lienzo, False, False), width = 10, height = 3)
+        boton_mirror_x = tkinter.Button(self.ventana, text = 'Mirror X', command = lambda: self.pintar3(lienzo, True, False), width = 10, height = 3)
+        boton_mirror_y = tkinter.Button(self.ventana, text = 'Mirror Y', command = lambda: self.pintar3(lienzo, False, True), width = 10, height = 3)
+        boton_double_mirror = tkinter.Button(self.ventana, text = 'Bouble Mirror', command = lambda: self.pintar3 (lienzo, True, True), width = 10, height = 3)
         
-        #boton_original = tkinter.Button(self.ventana, text = 'Original', command = lambda: self.pintar2(False, False), width = 10, height = 3)
-        #boton_mirror_x = tkinter.Button(self.ventana, text = 'Mirror X', command = lambda: self.pintar2(True, False), width = 10, height = 3)
-        #boton_mirror_y = tkinter.Button(self.ventana, text = 'Mirror Y', command = lambda: self.pintar2(False, True), width = 10, height = 3)
-        #boton_double_mirror = tkinter.Button(self.ventana, text = 'Bouble Mirror', command = lambda: self.pintar2(True, True), width = 10, height = 3)
-        
-        boton_borrar = tkinter.Button(self.ventana, text = 'Borrar imagen', command = self.pintar_imagen, width = 12 , height = 1, bg = '#A9EAFF')
+        boton_borrar = tkinter.Button(self.ventana, text = 'Borrar imagen', command = lambda: self.borrar_imagen(lienzo), width = 12 , height = 1, bg = '#A9EAFF')
         
         boton_cargar.place(x = 10, y = 10)
         boton_analizar.place(x = 100, y = 10)
@@ -77,25 +70,11 @@ class po():
     # Mirror_x --> True False
     # Mirror_y --> False True
     # Double_M --> True True
-    
-    def pintar(self, mirror_x, mirror_y):
-        self.lexico.graficar2(self.img, 400, 400, mirror_x, mirror_y, '') #cambiarlo al ancho de self los 400
-    
-    def pintar2(self, mirror_x, mirror_y):
-        self.lexico.graficar(self.img, 400, 400, mirror_x, mirror_y)
-                       
+    def pintar3(self, lienzo, mirror_x, mirror_y):
+        self.lexico.graficar3(lienzo, 400, 400, mirror_x, mirror_y, '') #cambiarlo al ancho de self los 400
+                               
     def borrar_imagen(self, lienzo):
         lienzo.delete(tkinter.ALL)
-    
-    def pintar_imagen(self):
-        contador_f = 0
-        contador_y = 0
-        for i in range(self.ancho*self.alto):
-            self.img.put('white',(contador_f,contador_y))
-            contador_f += 1
-            if contador_f == self.ancho:
-                contador_y += 1
-                contador_f = 0
     
 if __name__ == '__main__':
     po()

@@ -194,10 +194,10 @@ class Analizador():
     # Original --> False False
     # Mirror_x --> True False
     # Mirror_y --> False True
-    # Double_M --> True True       
-   
-    def graficar2(self, img, ancho, alto, mirror_x, mirror_y, nombre):
-        global reporteHTML
+    # Double_M --> True True
+    #-----------GRAFICAR CON CLASES Y RECTANGULOS-------------
+    def graficar3(self, lienzo, ancho, alto, mirror_x, mirror_y, nombre):
+        #global reporteHTML
         for image in self.imagenes: #validar el nombre de la que se desea 
             filas = int(image.filas)
             columnas = int(image.columnas)
@@ -205,83 +205,22 @@ class Analizador():
             factor_y = alto//columnas
             
             for contador in range(image.cantidad_colores):
-                coordenada_x = int(image.colores[contador].x)
-                coordenada_y = int(image.colores[contador].y)
-                if mirror_y:
-                    coordenada_y = int(columnas) - int(coordenada_y) + 1
+                aux_x = int(image.colores[contador].x)
+                aux_y = int(image.colores[contador].y)
                 if mirror_x:
-                    coordenada_x = int(filas) - int(coordenada_x) + 1
-             
-                coordenada_x *= int(factor_x)
-                coordenada_y *= int(factor_y) 
-                contador_f = 0
-                contador_y = 0
+                    aux_x = int(filas) - int(aux_x) + 1
+                if mirror_y:
+                    aux_y = int(columnas) - int(aux_y) + 1
+                    
+                coordenada_x = aux_x * factor_x
+                coordenada_y = aux_y * factor_y
+                
+                y_arriba = coordenada_y + factor_y
+                x_abajo = coordenada_x + factor_x
                 if image.colores[contador].pintar:
-                                                #x, y, factor_x, factor_y contenido.fillRect(0,4,33,33); ctx.fillStyle = "#FF0000";
-                    reporteHTML += 'contenido.fillStyle = \"'+image.colores[contador].codigo+'\";'
-                    reporteHTML += 'contenido.fillRect('+str(coordenada_x)+','+str(coordenada_y)+','+str(factor_x)+','+str(factor_y)+');\n'
-                    #print(impL)
-                    for i in range(factor_x*factor_y): 
-                        img.put(image.colores[contador].codigo,(coordenada_x+contador_f, coordenada_y+contador_y))
-                        contador_f += 1
-                        if contador_f == factor_x:
-                            contador_y += 1
-                            contador_f = 0
-                            
-    #-----------GRAFICAR CON LOS TOKENS-------------            
-    def graficar(self, img, ancho, alto, mirror_x, mirror_y):
-        pinta = True
-        coordenada_x = -1
-        coordenada_y = -1
-        token_fila = -1
-        filas = 0
-        columnas = 0
-        token_tamano_fila = -1
-        token_tamano_columna = -1
-        for token in self.tokens:
-            if token.get_lexema() == 'FILAS':
-                token_tamano_fila = token.get_fila() 
-            elif token_tamano_fila == token.get_fila() and token.tipo == self.tipos.NUMERO: #aca
-                filas = token.get_lexema() 
-            elif token.get_lexema() == 'COLUMNAS': #aca
-                token_tamano_columna = token.get_fila()
-            elif token_tamano_columna == token.get_fila() and token.tipo == self.tipos.NUMERO:
-                columnas = token.get_lexema()    
-            if token_fila < token.get_fila(): #donde guardo el numero de la fila es menor al numero de fila actual   saber si ya pase a la siguiente fila
-                coordenada_x = -1
-                coordenada_y = -1
-                token_fila = -1
-            if token.tipo == self.tipos.NUMERO:
-                if coordenada_x == -1:
-                    coordenada_x = token.get_lexema()
-                    token_fila = token.get_fila()
-                elif coordenada_y == -1 and token_fila == token.get_fila():
-                    coordenada_y = token.get_lexema()    
-            if token.tipo == self.tipos.BOOL:
-                if token.get_lexema() == 'TRUE':
-                    pinta = True
-                elif token.get_lexema() == 'FALSE':
-                    pinta = False          
-            if token.tipo == self.tipos.COLOR and token_fila == token.get_fila() and pinta: #si se encuentran en la misma fila el token color y el token numero y es True
-                factor_x = ancho//int(filas)
-                factor_y = alto//int(columnas)
-                color = token.get_lexema()
-                if mirror_y:
-                    coordenada_y = int(columnas) - int(coordenada_y) + 1
-                if mirror_x:
-                    coordenada_x = int(filas) - int(coordenada_x) + 1
-                print(color,coordenada_x,coordenada_y)
-                contador_f = 0
-                contador_y = 0
-                coordenada_x = int(coordenada_x) * int(factor_x)
-                coordenada_y = int(coordenada_y) * int(factor_y)
-                for i in range(factor_x*factor_y):
-                    img.put(color,(coordenada_x+contador_f,coordenada_y+contador_y))
-                    contador_f += 1
-                    if contador_f == factor_x:
-                        contador_y += 1
-                        contador_f = 0
-    
+                    print(coordenada_x, y_arriba, x_abajo, coordenada_y, image.colores[contador].codigo)
+                    lienzo.create_rectangle(coordenada_x, y_arriba, x_abajo, coordenada_y, width = 0, fill = image.colores[contador].codigo)
+            
     def guardar_imagen(self):
         cantidad_colores = 0
         titulo = ''
