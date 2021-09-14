@@ -69,7 +69,7 @@ class Interfaz():
         nombre = combo_imagenes.get() 
         if nombre != '':
             self.borrar_imagen(lienzo)
-            self.lexico.graficar_imagen(lienzo, 400, 400, mirror_x, mirror_y, double_mirror, nombre, tkinter) #cambiarlo al ancho de self los 400
+            self.lexico.graficar_imagen(lienzo, 400, 400, mirror_x, mirror_y, double_mirror, nombre, tkinter)
         else:
             messagebox.showinfo(message = "Seleccione una imagen", title = "Alerta")   
             

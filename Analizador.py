@@ -2,22 +2,21 @@ from Token import Token
 from Imagen import Imagen
 import re
 import webbrowser
-#import imgkit
+from html2image import Html2Image
 
 class Analizador():
     reporteHTML_token = ''
     reporteHTML_errores = ''
-    reporteHTML_imagen = ''
+    reporte_imagen = ''
     imagenes = []
     lexema = ''
     estado = 0
     tokens = []
     columna = 1
     fila = 1
-    generar = True
     id = 0
     tipos = Token("lexema", -1, -1, -1, -1)
-    colores = Imagen('',-1,-1,-1,-1,False,False,False,-1,-1)  
+    colores = Imagen('', -1, -1, -1, -1, False, False, False, -1, -1)  
     
     def agregar_token(self, tipo):
         nuevo_token = Token(self.lexema, tipo, self.fila, self.columna, self.id)
@@ -101,8 +100,7 @@ class Analizador():
                 else:
                     self.lexema += actual
                     self.agregar_token(self.tipos.ERROR)
-                    self.columna += 1
-                    self.generar = False    
+                    self.columna += 1  
             
             elif self.estado == 1:
                 if actual.isalpha():
@@ -142,7 +140,7 @@ class Analizador():
                     self.columna += 1
                     self.lexema += actual
                 else:
-                    self.agregar_token(self.tipos.ARROBA)                     
+                    self.agregar_token(self.tipos.SIGNO) #self.agregar_token(self.tipos.ARROBA)                     
                                 
             elif self.estado == 5:
                 if actual.isalpha():
@@ -179,71 +177,6 @@ class Analizador():
         if entrada in booleanos:
             return True
         return False
-     
-    def obtener_tokens(self):
-        font = '<font color=\"#000000\" face=\"Courier\">'
-        for x in self.tokens:
-            if x.tipo != self.tipos.ERROR:
-                self.reporteHTML_token += '<tr><td align=center>'+ font + x.get_tipo() + '</td><td align=center>'+ font + x.get_lexema() + '</td><td align=center>'+ font + str(x.get_fila()) + '</td><td align=center>'+ font + str(x.get_columna()) + '</td></tr>'
-                print(x.get_lexema()," --> ",x.get_tipo(),' --> ',x.get_fila(), ' --> ',x.get_columna(), ' --> ',x.get_id())
-    
-    def obtener_errores(self):
-        font = '<font color=\"#000000\" face=\"Courier\">'
-        for x in self.tokens:
-            if x.tipo == self.tipos.ERROR:
-                self.reporteHTML_errores += '<tr><td align=center>'+ font + x.get_lexema() + '</td><td align=center>'+ font + str(x.get_fila()) + '</td><td align=center>'+ font + str(x.get_columna()) + '</td></tr>'
-                print(x.get_lexema()," --> ",x.get_fila(), ' --> ',x.get_columna(),'--> Error Lexico')
-                            
-    # Original --> False False True
-    # Mirror_x --> True False False
-    # Mirror_y --> False True False
-    # Double_M --> False False True 
-    #-----------GRAFICAR CON CLASES Y RECTANGULOS-------------
-    def graficar_imagen(self, lienzo, ancho, alto, mirror_x, mirror_y, double_mirror, nombre, tkinter):
-        contador = 0
-        self.reporteHTML_imagen = ''
-        for image in self.imagenes:
-            while contador <= len(image.colores) - 1:
-                if image.cantidad_colores == contador:
-                    break
-                if image.titulo == nombre:
-                    if mirror_x:
-                        if image.mirrorx is False:
-                            tkinter.messagebox.showinfo(message = "El Filtro MIRRORX no se puede mostrar", title = "Alerta")   
-                            return
-                    if mirror_y:
-                        if image.mirrory is False:
-                            tkinter.messagebox.showinfo(message = "El Filtro MIRRORY no se puede mostrar", title = "Alerta")   
-                            return 
-                    if double_mirror:
-                        if image.doublemirror is False:
-                            tkinter.messagebox.showinfo(message = "El Filtro DOUBLEMIRROR no se puede mostrar", title = "Alerta")   
-                            return     
-                    filas = int(image.filas)
-                    columnas = int(image.columnas)
-                    factor_x = ancho//filas
-                    factor_y = alto//columnas
-                    if image.indice_imagen == image.colores[contador].indice_imagen:
-                        aux_x = int(image.colores[contador].x) 
-                        aux_y = int(image.colores[contador].y)
-                        if mirror_x:
-                            aux_x = int(filas) - int(aux_x) + 1
-                        if mirror_y:
-                            aux_y = int(columnas) - int(aux_y) + 1
-                        if double_mirror:
-                            aux_x = int(filas) - int(aux_x) + 1 
-                            aux_y = int(columnas) - int(aux_y) + 1  
-                        coordenada_x = aux_x * factor_x
-                        coordenada_y = aux_y * factor_y
-                        
-                        y_arriba = coordenada_y + factor_y
-                        x_abajo = coordenada_x + factor_x
-                        if image.colores[contador].pintar:
-                            self.reporteHTML_imagen += 'contenido.fillStyle = \"'+image.colores[contador].codigo+'\";'
-                            self.reporteHTML_imagen += 'contenido.fillRect('+str(coordenada_x)+','+str(coordenada_y)+','+str(factor_x)+','+str(factor_y)+');\n'
-                            #print(coordenada_x, y_arriba, x_abajo, coordenada_y, image.colores[contador].codigo)
-                            lienzo.create_rectangle(coordenada_x, y_arriba, x_abajo, coordenada_y, width = 0, fill = image.colores[contador].codigo)
-                contador += 1
      
     def guardar_imagen(self):
         titulo = ''
@@ -366,8 +299,59 @@ class Analizador():
                 cantidad_colores = 0
                 #print(titulo, ancho, alto, filas, columnas)
                 
-            counter += 1    
-    
+            counter += 1  
+        
+    # Original --> False False True
+    # Mirror_x --> True False False
+    # Mirror_y --> False True False
+    # Double_M --> False False True 
+    #-----------GRAFICAR CON CLASES Y RECTANGULOS-------------
+    def graficar_imagen(self, lienzo, ancho, alto, mirror_x, mirror_y, double_mirror, nombre, tkinter):
+        contador = 0
+        self.reporte_imagen = ''
+        for image in self.imagenes:
+            while contador <= len(image.colores) - 1:
+                if image.cantidad_colores == contador:
+                    break
+                if image.titulo == nombre:
+                    if mirror_x:
+                        if image.mirrorx is False:
+                            tkinter.messagebox.showinfo(message = "El Filtro MIRRORX no se puede mostrar", title = "Alerta")   
+                            return
+                    if mirror_y:
+                        if image.mirrory is False:
+                            tkinter.messagebox.showinfo(message = "El Filtro MIRRORY no se puede mostrar", title = "Alerta")   
+                            return 
+                    if double_mirror:
+                        if image.doublemirror is False:
+                            tkinter.messagebox.showinfo(message = "El Filtro DOUBLEMIRROR no se puede mostrar", title = "Alerta")   
+                            return     
+                    filas = int(image.filas)
+                    columnas = int(image.columnas)
+                    factor_x = ancho//filas
+                    factor_y = alto//columnas
+                    if image.indice_imagen == image.colores[contador].indice_imagen:
+                        aux_x = int(image.colores[contador].x) 
+                        aux_y = int(image.colores[contador].y)
+                        if mirror_x:
+                            aux_x = int(filas) - int(aux_x) + 1
+                        if mirror_y:
+                            aux_y = int(columnas) - int(aux_y) + 1
+                        if double_mirror:
+                            aux_x = int(filas) - int(aux_x) + 1 
+                            aux_y = int(columnas) - int(aux_y) + 1  
+                        coordenada_x = aux_x * factor_x
+                        coordenada_y = aux_y * factor_y
+                        
+                        y_arriba = coordenada_y + factor_y
+                        x_abajo = coordenada_x + factor_x
+                        if image.colores[contador].pintar:
+                            self.reporte_imagen += 'contenido.fillStyle = \"'+image.colores[contador].codigo+'\";'
+                            self.reporte_imagen += 'contenido.fillRect('+str(coordenada_x)+','+str(coordenada_y)+','+str(factor_x)+','+str(factor_y)+');\n'
+                            #print(coordenada_x, y_arriba, x_abajo, coordenada_y, image.colores[contador].codigo)
+                            lienzo.create_rectangle(coordenada_x, y_arriba, x_abajo, coordenada_y, width = 0, fill = image.colores[contador].codigo)
+                contador += 1
+                  
     def opciones_imagenes(self, combo):
         nombres = []
         values = list(combo["values"])
@@ -385,8 +369,23 @@ class Analizador():
                 if img.indice_imagen == img.colores[i].indice_imagen:
                     print(img.colores[i].x, img.colores[i].y, img.colores[i].pintar, img.colores[i].codigo, img.colores[i].indice_imagen)    
                 i += 1
+    
+    def obtener_tokens(self):
+        font = '<font color=\"#000000\" face=\"Courier\">'
+        for x in self.tokens:
+            if x.tipo != self.tipos.ERROR:
+                self.reporteHTML_token += '<tr><td align=center>'+ font + x.get_tipo() + '</td><td align=center>'+ font + x.get_lexema() + '</td><td align=center>'+ font + str(x.get_fila()) + '</td><td align=center>'+ font + str(x.get_columna()) + '</td></tr>'
+                print(x.get_lexema()," --> ",x.get_tipo(),' --> ',x.get_fila(), ' --> ',x.get_columna(), ' --> ',x.get_id())
+    
+    def obtener_errores(self):
+        font = '<font color=\"#000000\" face=\"Courier\">'
+        for x in self.tokens:
+            if x.tipo == self.tipos.ERROR:
+                self.reporteHTML_errores += '<tr><td align=center>'+ font + x.get_lexema() + '</td><td align=center>'+ font + str(x.get_fila()) + '</td><td align=center>'+ font + str(x.get_columna()) + '</td></tr>'
+                print(x.get_lexema()," --> ",x.get_fila(), ' --> ',x.get_columna(),'--> Error Lexico')                                      
                     
     def crear_reporte_imagen(self):
+        hti = Html2Image()
         try: 
             file = open('Imagen.html','w')
             css = '''<style>section{ \n
@@ -397,7 +396,7 @@ class Analizador():
             body = "<body>\n<section id = \"dibujo\">"
             body += "<canvas id = \"lienzo\" width = \"550\" height = \"550\"></canvas></section><script>\n"
             body += "var c = document.getElementById(\"lienzo\"); var contenido = c.getContext(\"2d\");\n"
-            body += self.reporteHTML_imagen + "</script></body>"
+            body += self.reporte_imagen + "</script></body>"
             html = '<html>\n' + head + body + '</html>'
             file.write(html)
             print('Imagen guardada exitosamente')
@@ -405,10 +404,9 @@ class Analizador():
             print("Error al guardar la imagen")
         finally:         
             file.close()
+            hti.screenshot(html_file='Imagen.html', size=(550, 550), save_as='Imagen.jpg')
             webbrowser.open_new_tab('Imagen.html')
-        #with open('Imagen.html') as f:
-            #imgkit.from_file(f, 'out.jpg')
-          
+       
     def crear_reporte_token(self):
         try: 
             file = open('Reporte_Tokens.html','w')

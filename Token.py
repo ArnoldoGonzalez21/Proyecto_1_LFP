@@ -11,7 +11,6 @@ class Token():
     RESTO = 4
     CADENA = 5
     SIGNO = 6
-    ARROBA = 6.1
     COLOR = 7
     BOOL = 8
     ERROR = 9
@@ -34,8 +33,6 @@ class Token():
             return 'Cadena'
         elif self.tipo == self.SIGNO:
             return 'Signo'
-        elif self.tipo == self.ARROBA:
-            return 'Arroba'
         elif self.tipo == self.COLOR:
             return 'Color'
         elif self.tipo == self.BOOL:
@@ -51,6 +48,4 @@ class Token():
         return self.columna
     
     def get_id(self):
-        return self.id   
-        
-            
+        return self.id 
