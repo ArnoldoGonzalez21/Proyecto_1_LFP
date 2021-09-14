@@ -1,13 +1,13 @@
-from Color import Color
 from Token import Token
 from Imagen import Imagen
 import re
 import webbrowser
-
-reporteHTML = ''
+#import imgkit
 
 class Analizador():
-    
+    reporteHTML_token = ''
+    reporteHTML_errores = ''
+    reporteHTML_imagen = ''
     imagenes = []
     lexema = ''
     estado = 0
@@ -15,11 +15,9 @@ class Analizador():
     columna = 1
     fila = 1
     generar = True
-    i = 0
-    tipos = Token("lexema", -1, -1, -1, -1)
-    colores = Imagen('',-1,-1,-1,-1,False,False,False,-1,-1)
-  
     id = 0
+    tipos = Token("lexema", -1, -1, -1, -1)
+    colores = Imagen('',-1,-1,-1,-1,False,False,False,-1,-1)  
     
     def agregar_token(self, tipo):
         nuevo_token = Token(self.lexema, tipo, self.fila, self.columna, self.id)
@@ -182,54 +180,70 @@ class Analizador():
             return True
         return False
      
-    def Imprimir(self):
+    def obtener_tokens(self):
+        font = '<font color=\"#000000\" face=\"Courier\">'
         for x in self.tokens:
             if x.tipo != self.tipos.ERROR:
+                self.reporteHTML_token += '<tr><td align=center>'+ font + x.get_tipo() + '</td><td align=center>'+ font + x.get_lexema() + '</td><td align=center>'+ font + str(x.get_fila()) + '</td><td align=center>'+ font + str(x.get_columna()) + '</td></tr>'
                 print(x.get_lexema()," --> ",x.get_tipo(),' --> ',x.get_fila(), ' --> ',x.get_columna(), ' --> ',x.get_id())
     
-    def ImprimirErrores(self):
+    def obtener_errores(self):
+        font = '<font color=\"#000000\" face=\"Courier\">'
         for x in self.tokens:
             if x.tipo == self.tipos.ERROR:
+                self.reporteHTML_errores += '<tr><td align=center>'+ font + x.get_lexema() + '</td><td align=center>'+ font + str(x.get_fila()) + '</td><td align=center>'+ font + str(x.get_columna()) + '</td></tr>'
                 print(x.get_lexema()," --> ",x.get_fila(), ' --> ',x.get_columna(),'--> Error Lexico')
                             
-    # Original --> False False
-    # Mirror_x --> True False
-    # Mirror_y --> False True
-    # Double_M --> True True
+    # Original --> False False True
+    # Mirror_x --> True False False
+    # Mirror_y --> False True False
+    # Double_M --> False False True 
     #-----------GRAFICAR CON CLASES Y RECTANGULOS-------------
-    def graficar_imagen(self, lienzo, ancho, alto, mirror_x, mirror_y, nombre):
-        #global reporteHTML
+    def graficar_imagen(self, lienzo, ancho, alto, mirror_x, mirror_y, double_mirror, nombre, tkinter):
         contador = 0
-        for image in self.imagenes: #validar el nombre de la que se desea
+        self.reporteHTML_imagen = ''
+        for image in self.imagenes:
             while contador <= len(image.colores) - 1:
                 if image.cantidad_colores == contador:
                     break
                 if image.titulo == nombre:
+                    if mirror_x:
+                        if image.mirrorx is False:
+                            tkinter.messagebox.showinfo(message = "El Filtro MIRRORX no se puede mostrar", title = "Alerta")   
+                            return
+                    if mirror_y:
+                        if image.mirrory is False:
+                            tkinter.messagebox.showinfo(message = "El Filtro MIRRORY no se puede mostrar", title = "Alerta")   
+                            return 
+                    if double_mirror:
+                        if image.doublemirror is False:
+                            tkinter.messagebox.showinfo(message = "El Filtro DOUBLEMIRROR no se puede mostrar", title = "Alerta")   
+                            return     
                     filas = int(image.filas)
                     columnas = int(image.columnas)
                     factor_x = ancho//filas
                     factor_y = alto//columnas
                     if image.indice_imagen == image.colores[contador].indice_imagen:
-                #for contador in range(image.cantidad_colores):
                         aux_x = int(image.colores[contador].x) 
                         aux_y = int(image.colores[contador].y)
                         if mirror_x:
                             aux_x = int(filas) - int(aux_x) + 1
                         if mirror_y:
                             aux_y = int(columnas) - int(aux_y) + 1
-                            
+                        if double_mirror:
+                            aux_x = int(filas) - int(aux_x) + 1 
+                            aux_y = int(columnas) - int(aux_y) + 1  
                         coordenada_x = aux_x * factor_x
                         coordenada_y = aux_y * factor_y
                         
                         y_arriba = coordenada_y + factor_y
                         x_abajo = coordenada_x + factor_x
                         if image.colores[contador].pintar:
+                            self.reporteHTML_imagen += 'contenido.fillStyle = \"'+image.colores[contador].codigo+'\";'
+                            self.reporteHTML_imagen += 'contenido.fillRect('+str(coordenada_x)+','+str(coordenada_y)+','+str(factor_x)+','+str(factor_y)+');\n'
                             #print(coordenada_x, y_arriba, x_abajo, coordenada_y, image.colores[contador].codigo)
                             lienzo.create_rectangle(coordenada_x, y_arriba, x_abajo, coordenada_y, width = 0, fill = image.colores[contador].codigo)
                 contador += 1
-                #else:
-                 #   print('nooooooooooo')
-                #return 'Seleccione una imagen valida'   
      
     def guardar_imagen(self):
         titulo = ''
@@ -329,7 +343,6 @@ class Analizador():
             elif token.tipo == self.tipos.COLOR and lexema == 'CELDAS' and id_coordenada == int(token.get_id()) - 6:
                 codigo_color = token.get_lexema()
                 self.colores.agregar_color(coordenada_x, coordenada_y, valor, codigo_color, indice_imagen)
-                #colores.append(nuevo_color)
                 cantidad_colores += 1
                 #print(coordenada_x, coordenada_y,valor,codigo_color)
             
@@ -362,7 +375,7 @@ class Analizador():
             nombres.append(img.titulo) 
         combo["values"] = values + nombres
     
-    def impr(self):
+    def imprimir_imagen(self):
         i = 0
         for img in self.imagenes:
             print(img.titulo, img.ancho, img.alto, img.filas, img.columnas, img.mirrorx, img.mirrory, img.doublemirror, img.cantidad_colores, img.indice_imagen)
@@ -373,48 +386,76 @@ class Analizador():
                     print(img.colores[i].x, img.colores[i].y, img.colores[i].pintar, img.colores[i].codigo, img.colores[i].indice_imagen)    
                 i += 1
                     
-    def crear_reporte(self):
-        global reporteHTML
+    def crear_reporte_imagen(self):
         try: 
-            file = open('Reporte.html','w')
+            file = open('Imagen.html','w')
             css = '''<style>section{ \n
-            width:550px;
-            position:relative;
-            margin:auto;} </style>'''
-            head = '<head><title>Reporte</title>'+css+'</head>\n'
-            body = "<body> <font FACE=\"times new roman\">\n<section id = \"dibujo\">"
+                        width:550px;
+                        position:relative;
+                        margin:auto;} </style>'''
+            head = '<head><title>Imagen</title>'+css+'</head>\n'
+            body = "<body>\n<section id = \"dibujo\">"
             body += "<canvas id = \"lienzo\" width = \"550\" height = \"550\"></canvas></section><script>\n"
             body += "var c = document.getElementById(\"lienzo\"); var contenido = c.getContext(\"2d\");\n"
-            body += reporteHTML + "</script></body>"
+            body += self.reporteHTML_imagen + "</script></body>"
             html = '<html>\n' + head + body + '</html>'
             file.write(html)
-            print('Reporte generado exitosamente')
+            print('Imagen guardada exitosamente')
         except OSError:
-            print("Error al crear el Reporte")
+            print("Error al guardar la imagen")
         finally:         
             file.close()
-            webbrowser.open_new_tab('Reporte.html')
-    
-    def crear_reporte2(self):
-        global reporteHTML
+            webbrowser.open_new_tab('Imagen.html')
+        #with open('Imagen.html') as f:
+            #imgkit.from_file(f, 'out.jpg')
+          
+    def crear_reporte_token(self):
         try: 
-            file = open('Reporte.html','w')
-            head = '<head><title>Reporte</title></head>\n'
-            body = "<body bgcolor=\"#B6F49D\"> <font FACE=\"times new roman\">"
-            body += "<table width=\"475\" bgcolor=#B6F49D align=left> <tr> <td><font color=\"black\" FACE=\"times new roman\">" 
+            file = open('Reporte_Tokens.html','w')
+            head = '<head><title>Reporte Token</title></head>\n'
+            body = "<body bgcolor=\"#B6F49D\">"
+            body += "<table width=\"600\" bgcolor=#B6F49D align=left> <tr> <td><font color=\"black\" FACE=\"Courier\">" 
             body += "<p align=\"left\">Arnoldo Luis Antonio González Camey &nbsp;—&nbsp; Carné: 201701548</p></font>"
-            body += "</td> </tr></table></br></br>" +   reporteHTML + "</body>"
+            body += "</td> </tr></table></br></br>"
+            body += ''' <h2 align=\"center\"><font color=\"black\" FACE=\"Courier\">Reporte de Tokens</h2>
+                    <table width=\"1000\" bgcolor=#CDF9BA align=center style="border:5px dashed brown">
+                    <tr>
+                        <td align=center><font color=\"#000000\" face=\"Courier\"><strong>Token</strong></td>
+                        <td align=center><font color=\"#000000\" face=\"Courier\"><strong>Lexema</strong></td>
+                        <td align=center><font color=\"#000000\" face=\"Courier\"><strong>Fila</strong></td>                                            
+                        <td align=center><font color=\"#000000\" face=\"Courier\"><strong>Columna</strong></td>
+                    </tr>''' 
+            body += self.reporteHTML_token +'</table></body>'
             html = '<html>\n' + head + body + '</html>'
             file.write(html)
-            print('Reporte generado exitosamente')
+            print('Reporte de Tokens generado exitosamente')
         except OSError:
-            print("Error al crear el Reporte")
+            print("Error al crear el Reporte de Tokens")
         finally:         
             file.close()
-            webbrowser.open_new_tab('Reporte.html')
-
-    def agregar_texto(self, text, color):
-        global reporteHTML 
-        reporteHTML += '<table width=\"800\" bgcolor=CDF9BA align=center> <tr> <td>'
-        reporteHTML += '<font color=\"'+color+'\" FACE=\"courier, courier new, arial\"><p align=\"left\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + text + '</p></font>'
-        reporteHTML += '</td> </tr> </table>'
+            webbrowser.open_new_tab('Reporte_Tokens.html')
+        
+    def crear_reporte_errores(self):
+        try: 
+            file = open('Reporte_Errores.html','w')
+            head = '<head><title>Reporte Errores</title></head>\n'
+            body = "<body bgcolor=\"#B6F49D\">"
+            body += "<table width=\"600\" bgcolor=#B6F49D align=left> <tr> <td><font color=\"black\" FACE=\"Courier\">" 
+            body += "<p align=\"left\">Arnoldo Luis Antonio González Camey &nbsp;—&nbsp; Carné: 201701548</p></font>"
+            body += "</td> </tr></table></br></br>"
+            body += ''' <h2 align=\"center\"><font color=\"black\" FACE=\"Courier\">Reporte de Errores</h2>
+                    <table width=\"800\" bgcolor=#CDF9BA align=center style="border:5px dashed brown">
+                    <tr>
+                        <td align=center><font color=\"#000000\" face=\"Courier\"><strong>Caracter</strong></td>
+                        <td align=center><font color=\"#000000\" face=\"Courier\"><strong>Fila</strong></td>                                            
+                        <td align=center><font color=\"#000000\" face=\"Courier\"><strong>Columna</strong></td>
+                    </tr>''' 
+            body += self.reporteHTML_errores +'</table></body>'
+            html = '<html>\n' + head + body + '</html>'
+            file.write(html)
+            print('Reporte de Errores generado exitosamente')
+        except OSError:
+            print("Error al crear el Reporte de Errores")
+        finally:         
+            file.close()
+            webbrowser.open_new_tab('Reporte_Errores.html')
