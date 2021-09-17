@@ -3,6 +3,7 @@ from Imagen import Imagen
 import re
 import webbrowser
 from html2image import Html2Image
+from PIL import Image, ImageDraw
 
 class Analizador():
     reporteHTML_token = ''
@@ -15,6 +16,8 @@ class Analizador():
     columna = 1
     fila = 1
     id = 0
+    img = Image.new('RGB', (550, 550), color='white')
+    draw = ImageDraw.Draw(img)
     tipos = Token("lexema", -1, -1, -1, -1)
     colores = Imagen('', -1, -1, -1, -1, False, False, False, -1, -1)  
     
@@ -307,6 +310,8 @@ class Analizador():
     # Double_M --> False False True 
     #-----------GRAFICAR CON CLASES Y RECTANGULOS-------------
     def graficar_imagen(self, lienzo, ancho, alto, mirror_x, mirror_y, double_mirror, nombre, tkinter):
+        
+        self.draw.rectangle((0,0,550,550), fill = 'white', width = 0) #reinicio de dibujo png
         contador = 0
         self.reporte_imagen = ''
         for image in self.imagenes:
@@ -346,8 +351,9 @@ class Analizador():
                         y_arriba = coordenada_y + factor_y
                         x_abajo = coordenada_x + factor_x
                         if image.colores[contador].pintar:
-                            self.reporte_imagen += 'contenido.fillStyle = \"'+image.colores[contador].codigo+'\";'
-                            self.reporte_imagen += 'contenido.fillRect('+str(coordenada_x)+','+str(coordenada_y)+','+str(factor_x)+','+str(factor_y)+');\n'
+                            #self.reporte_imagen += 'contenido.fillStyle = \"'+image.colores[contador].codigo+'\";'
+                            #self.reporte_imagen += 'contenido.fillRect('+str(coordenada_x)+','+str(coordenada_y)+','+str(factor_x)+','+str(factor_y)+');\n'
+                            self.draw.rectangle((coordenada_x,y_arriba,x_abajo,coordenada_y),fill=image.colores[contador].codigo,width=0)
                             #print(coordenada_x, y_arriba, x_abajo, coordenada_y, image.colores[contador].codigo)
                             lienzo.create_rectangle(coordenada_x, y_arriba, x_abajo, coordenada_y, width = 0, fill = image.colores[contador].codigo)
                 contador += 1
@@ -383,7 +389,10 @@ class Analizador():
             if x.tipo == self.tipos.ERROR:
                 self.reporteHTML_errores += '<tr><td align=center>'+ font + x.get_lexema() + '</td><td align=center>'+ font + str(x.get_fila()) + '</td><td align=center>'+ font + str(x.get_columna()) + '</td></tr>'
                 print(x.get_lexema()," --> ",x.get_fila(), ' --> ',x.get_columna(),'--> Error Lexico')                                      
-                    
+    
+    def guardar_imagen_png(self):
+        self.img.save('imagen.png')
+                            
     def crear_reporte_imagen(self):
         hti = Html2Image()
         try: 

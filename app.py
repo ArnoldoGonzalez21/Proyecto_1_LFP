@@ -77,7 +77,8 @@ class Interfaz():
         lienzo.delete(tkinter.ALL)
     
     def guardar_imagen(self):
-        self.lexico.crear_reporte_imagen()
+        #self.lexico.crear_reporte_imagen()
+        self.lexico.guardar_imagen_png()
         
     def crear_reportes(self):
         self.lexico.obtener_tokens()
