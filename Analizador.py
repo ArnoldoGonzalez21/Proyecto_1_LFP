@@ -4,8 +4,10 @@ import re
 import webbrowser
 from html2image import Html2Image
 from PIL import Image, ImageDraw
+from os import startfile
 
 class Analizador():
+    indice_nombre_imagen = 1
     reporteHTML_token = ''
     reporteHTML_errores = ''
     reporte_imagen = ''
@@ -390,8 +392,10 @@ class Analizador():
                 self.reporteHTML_errores += '<tr><td align=center>'+ font + x.get_lexema() + '</td><td align=center>'+ font + str(x.get_fila()) + '</td><td align=center>'+ font + str(x.get_columna()) + '</td></tr>'
                 print(x.get_lexema()," --> ",x.get_fila(), ' --> ',x.get_columna(),'--> Error Lexico')                                      
     
-    def guardar_imagen_png(self):
-        self.img.save('imagen.png')
+    def guardar_imagen_png(self, nombre):
+        self.img.save(nombre+str(self.indice_nombre_imagen)+'.png') 
+        startfile(nombre+str(self.indice_nombre_imagen)+'.png')
+        self.indice_nombre_imagen +=1
                             
     def crear_reporte_imagen(self):
         hti = Html2Image()

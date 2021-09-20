@@ -8,6 +8,7 @@ HEIGHT = 700
 
 class Interfaz():
     data = ''
+    nombre = ''
     lexico = Analizador()
     ventana = tkinter.Tk()     
     ancho = 550
@@ -66,10 +67,10 @@ class Interfaz():
     # Double_M --> False False True 
     def dibujar_imagen(self, lienzo, combo_imagenes, mirror_x, mirror_y, double_mirror):
         #self.lexico.imprimir_imagen()
-        nombre = combo_imagenes.get() 
-        if nombre != '':
+        self.nombre = combo_imagenes.get() 
+        if self.nombre != '':
             self.borrar_imagen(lienzo)
-            self.lexico.graficar_imagen(lienzo, 400, 400, mirror_x, mirror_y, double_mirror, nombre, tkinter)
+            self.lexico.graficar_imagen(lienzo, 400, 400, mirror_x, mirror_y, double_mirror, self.nombre, tkinter)
         else:
             messagebox.showinfo(message = "Seleccione una imagen", title = "Alerta")   
             
@@ -78,7 +79,10 @@ class Interfaz():
     
     def guardar_imagen(self):
         #self.lexico.crear_reporte_imagen()
-        self.lexico.guardar_imagen_png()
+        if self.nombre != '':
+            self.lexico.guardar_imagen_png(self.nombre)
+        else:
+            messagebox.showinfo(message = "Seleccione una imagen", title = "Alerta")    
         
     def crear_reportes(self):
         self.lexico.obtener_tokens()
